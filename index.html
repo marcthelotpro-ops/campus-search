@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus de la Performance — Onet L&P</title>
+<style>
+  /* =============================================
+     VARIABLES & RESET
+  ============================================= */
+  :root {
+    --red: #E2001A;
+    --dark: #3C3C3C;
+    --mid: #6E6E6E;
+    --light: #F5F5F5;
+    --border: #E8E8E8;
+    --white: #FFFFFF;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --radius: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
+
+  /* =============================================
+     HEADER
+  ============================================= */
+  .header {
+    background: var(--dark);
+    padding: 0;
+    border-bottom: 3px solid var(--red);
+  }
+  .header-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo-zone { display: flex; flex-direction: column; }
+  .logo-label { color: var(--red); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 3px; }
+  .logo-title { color: var(--white); font-size: 18px; font-weight: 400; }
+  .header-nav { display: flex; gap: 20px; }
+  .header-nav a { color: rgba(255,255,255,0.7); font-size: 13px; text-decoration: none; }
+  .header-nav a:hover { color: var(--white); }
+
+  /* =============================================
+     HERO SEARCH
+  ============================================= */
+  .hero {
+    background: var(--white);
+    padding: 60px 24px 40px;
+    text-align: center;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .hero-title { font-size: 28px; font-weight: 400; color: var(--dark); margin-bottom: 8px; }
+  .hero-title span { color: var(--red); font-weight: 500; }
+  .hero-sub { font-size: 14px; color: var(--mid); margin-bottom: 32px; }
+
+  .search-container { max-width: 620px; margin: 0 auto; position: relative; }
+  .search-input {
+    width: 100%;
+    padding: 16px 56px 16px 20px;
+    border: 2px solid var(--border);
+    border-radius: 40px;
+    font-size: 16px;
+    color: var(--dark);
+    outline: none;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--red); }
+  .search-input::placeholder { color: #BBBBBB; }
+  .search-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: var(--red); border: none; color: var(--white);
+    width: 44px; height: 44px; border-radius: 50%;
+    cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .search-btn:hover { background: #B8001A; }
+
+  .search-tags { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .tag {
+    background: var(--light); color: var(--mid);
+    border: 0.5px solid var(--border);
+    font-size: 12px; padding: 4px 12px; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .tag:hover { background: #FDECEA; color: var(--red); border-color: var(--red); }
+
+  /* =============================================
+     FILTRES
+  ============================================= */
+  .filters {
+    background: var(--white);
+    border-bottom: 0.5px solid var(--border);
+    padding: 10px 24px;
+    display: none;
+  }
+  .filters.visible { display: block; }
+  .filters-inner { max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .filter-label { font-size: 12px; color: var(--mid); }
+  .filter-btn {
+    font-size: 12px; padding: 4px 12px;
+    border: 0.5px solid var(--border); border-radius: 20px;
+    background: var(--white); color: var(--dark); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--red); color: var(--white); border-color: var(--red); }
+  .results-count { margin-left: auto; font-size: 12px; color: var(--mid); }
+
+  /* =============================================
+     RÉSULTATS
+  ============================================= */
+  .results-zone { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  /* État initial */
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-size: 18px; color: var(--mid); margin-bottom: 8px; }
+  .empty-sub { font-size: 14px; color: #BBBBBB; }
+
+  /* Grille de cartes */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  /* Carte fiche */
+  .card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border-top: 3px solid var(--red);
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+
+  .card-image {
+    width: 100%; height: 130px; object-fit: cover;
+    background: linear-gradient(135deg, #FDECEA 0%, #F5F5F5 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; color: var(--red);
+  }
+  .card-image img { width: 100%; height: 130px; object-fit: cover; }
+
+  .card-body { padding: 14px; }
+  .card-type { font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 5px; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--dark); margin-bottom: 6px; line-height: 1.4; }
+  .card-desc { font-size: 12px; color: var(--mid); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; }
+  .card-client { font-size: 11px; color: var(--mid); background: var(--light); padding: 2px 8px; border-radius: 20px; }
+  .card-date { font-size: 10px; color: #BBBBBB; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 40px; display: none; }
+  .loading.visible { display: block; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Aucun résultat */
+  .no-results { text-align: center; padding: 40px; display: none; }
+  .no-results.visible { display: block; }
+
+  /* Modal fiche */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius);
+    max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header { border-top: 4px solid var(--red); padding: 20px 24px 0; }
+  .modal-type { font-size: 11px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 6px; }
+  .modal-title { font-size: 20px; font-weight: 500; color: var(--dark); margin-bottom: 12px; }
+  .modal-meta { display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
+  .modal-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--light); color: var(--mid); }
+  .modal-body { padding: 20px 24px; }
+  .modal-section { margin-bottom: 20px; }
+  .modal-section-title { font-size: 11px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; border-left: 3px solid var(--red); padding-left: 8px; margin-bottom: 10px; }
+  .modal-text { font-size: 14px; color: var(--dark); line-height: 1.6; }
+  .modal-footer { padding: 16px 24px; border-top: 0.5px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-primary { background: var(--red); color: var(--white); border: none; padding: 8px 20px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+  .btn-secondary { background: var(--white); color: var(--dark); border: 0.5px solid var(--border); padding: 8px 20px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+
+  /* =============================================
+     FOOTER
+  ============================================= */
+  .footer { background: var(--dark); padding: 16px 24px; text-align: center; margin-top: 40px; }
+  .footer-text { color: rgba(255,255,255,0.4); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- =============================================
+     CONFIGURATION — À MODIFIER
+============================================= -->
+<script>
+  const CONFIG = {
+    // URL de votre site SharePoint CP-Projets
+    sharepointUrl: "https://mjmconsulting322.sharepoint.com/sites/CP-Projets",
+
+    // Nom de votre liste SharePoint
+    listName: "Fiches Projets et Innovations",
+
+    // Colonnes à récupérer (noms internes SharePoint)
+    columns: "Title,CP_StatutFiche,CP_Thematique,CP_SiteClient,CP_GainsObtenus,CP_DescriptionSolution,CP_Reproductible,Author,Modified,CP_TypeProjet",
+
+    // Colonne de filtre statut (seules les fiches validées)
+    filterValidated: "CP_StatutFiche eq 'Valide'",
+
+    // Nombre de résultats max
+    maxResults: 50
+  };
+</script>
+
+<!-- HEADER -->
+<div style="background:#E2001A; height:3px;"></div>
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-zone">
+      <span class="logo-label">Onet Logistique &amp; Production</span>
+      <span class="logo-title">Campus de la Performance</span>
+    </div>
+    <nav class="header-nav">
+      <a href="#">Accueil</a>
+      <a href="#">Projets</a>
+      <a href="#">Clients</a>
+      <a href="#">Formation</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO SEARCH -->
+<section class="hero">
+  <h1 class="hero-title">Trouvez le <span>savoir-faire</span> qu'il vous faut</h1>
+  <p class="hero-sub">Recherchez parmi les fiches projets, bonnes pratiques et innovations de toute la BU</p>
+
+  <div class="search-container">
+    <input
+      class="search-input"
+      id="searchInput"
+      type="text"
+      placeholder="Ex : lean manufacturing, réduction coûts, Airbus..."
+      autocomplete="off"
+    />
+    <button class="search-btn" onclick="doSearch()" title="Rechercher">&#128269;</button>
+  </div>
+
+  <div class="search-tags">
+    <span class="tag" onclick="searchTag('Airbus')">Airbus</span>
+    <span class="tag" onclick="searchTag('Safran')">Safran</span>
+    <span class="tag" onclick="searchTag('EDF')">EDF</span>
+    <span class="tag" onclick="searchTag('lean')">Lean</span>
+    <span class="tag" onclick="searchTag('RSE')">RSE</span>
+    <span class="tag" onclick="searchTag('innovation')">Innovation</span>
+    <span class="tag" onclick="searchTag('réduction coûts')">Réduction coûts</span>
+    <span class="tag" onclick="searchTag('onboarding')">Onboarding</span>
+  </div>
+</section>
+
+<!-- FILTRES -->
+<div class="filters" id="filtersBar">
+  <div class="filters-inner">
+    <span class="filter-label">Filtrer :</span>
+    <button class="filter-btn active" onclick="setFilter('tous', this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('Logistique', this)">Logistique</button>
+    <button class="filter-btn" onclick="setFilter('QSE', this)">QSE</button>
+    <button class="filter-btn" onclick="setFilter('RH', this)">RH</button>
+    <button class="filter-btn" onclick="setFilter('Innovation', this)">Innovation</button>
+    <button class="filter-btn" onclick="setFilter('RSE', this)">RSE</button>
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+</div>
+
+<!-- RÉSULTATS -->
+<div class="results-zone">
+
+  <!-- État initial -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">🔍</div>
+    <p class="empty-title">Que cherchez-vous ?</p>
+    <p class="empty-sub">Tapez un mot-clé, un client, une thématique ou cliquez sur un tag</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="font-size:13px; color:#6E6E6E;">Recherche en cours...</p>
+  </div>
+
+  <!-- Aucun résultat -->
+  <div class="no-results" id="noResults">
+    <div style="font-size:40px; margin-bottom:12px;">😕</div>
+    <p style="font-size:16px; color:#6E6E6E; margin-bottom:6px;">Aucune fiche trouvée</p>
+    <p style="font-size:13px; color:#BBBBBB;">Essayez avec d'autres mots-clés</p>
+  </div>
+
+  <!-- Grille -->
+  <div class="cards-grid" id="cardsGrid"></div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <p class="modal-type" id="modalType"></p>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <div class="modal-meta" id="modalMeta"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <p class="modal-section-title">Contexte &amp; Solution</p>
+        <p class="modal-text" id="modalDesc"></p>
+      </div>
+      <div class="modal-section">
+        <p class="modal-section-title">Gains obtenus</p>
+        <p class="modal-text" id="modalGains"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="document.getElementById('modalOverlay').classList.remove('visible')">Fermer</button>
+      <button class="btn-primary" id="modalLink">Voir la fiche complète →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-text">Campus de la Performance — Onet Logistique &amp; Production © 2024</p>
+</footer>
+
+<!-- =============================================
+     JAVASCRIPT
+============================================= -->
+<script>
+
+let allResults = [];
+let currentFilter = 'tous';
+let currentQuery = '';
+
+// Icônes par thématique
+const icons = {
+  'Logistique': '📦',
+  'QSE': '🛡️',
+  'RH': '👥',
+  'IT': '💻',
+  'Finance': '💰',
+  'Commercial': '🤝',
+  'RSE': '🌿',
+  'Innovation': '🚀',
+  'default': '📋'
+};
+
+// Entrée clavier
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSearch();
+});
+
+// Recherche par tag
+function searchTag(keyword) {
+  document.getElementById('searchInput').value = keyword;
+  doSearch();
+}
+
+// Filtre thématique
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards(allResults);
+}
+
+// Recherche principale
+async function doSearch() {
+  currentQuery = document.getElementById('searchInput').value.trim();
+  if (!currentQuery) return;
+
+  showLoading();
+
+  try {
+    // Appel API SharePoint REST
+    const results = await fetchFromSharePoint(currentQuery);
+    allResults = results;
+    hideLoading();
+
+    if (results.length === 0) {
+      showNoResults();
+    } else {
+      document.getElementById('filtersBar').classList.add('visible');
+      renderCards(results);
+    }
+  } catch (error) {
+    hideLoading();
+    console.error('Erreur API SharePoint:', error);
+    // En mode démo : afficher des données fictives
+    allResults = getDemoData(currentQuery);
+    document.getElementById('filtersBar').classList.add('visible');
+    renderCards(allResults);
+  }
+}
+
+// Appel API SharePoint REST
+async function fetchFromSharePoint(query) {
+  const encodedQuery = encodeURIComponent(query);
+  const filter = `(substringof('${query}',Title) or substringof('${query}',CP_DescriptionSolution) or substringof('${query}',CP_GainsObtenus) or substringof('${query}',CP_SiteClient)) and (${CONFIG.filterValidated})`;
+  
+  const url = `${CONFIG.sharepointUrl}/_api/web/lists/getbytitle('${CONFIG.listName}')/items?$select=${CONFIG.columns}&$filter=${encodeURIComponent(filter)}&$top=${CONFIG.maxResults}&$orderby=Modified desc`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/json;odata=nometadata',
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
+  });
+
+  if (!response.ok) throw new Error('Erreur API');
+  const data = await response.json();
+  return data.value || [];
+}
+
+// Rendu des cartes
+function renderCards(items) {
+  const grid = document.getElementById('cardsGrid');
+  const count = document.getElementById('resultsCount');
+  
+  // Appliquer le filtre thématique
+  let filtered = items;
+  if (currentFilter !== 'tous') {
+    filtered = items.filter(item => item.CP_Thematique === currentFilter);
+  }
+
+  count.textContent = `${filtered.length} fiche${filtered.length > 1 ? 's' : ''} trouvée${filtered.length > 1 ? 's' : ''}`;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('noResults').classList.remove('visible');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    showNoResults();
+    return;
+  }
+
+  grid.innerHTML = filtered.map((item, index) => {
+    const thematique = item.CP_Thematique || 'default';
+    const icon = icons[thematique] || icons['default'];
+    const client = Array.isArray(item.CP_SiteClient) ? item.CP_SiteClient.join(', ') : (item.CP_SiteClient || '');
+    const date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
+    const desc = item.CP_DescriptionSolution || item.CP_GainsObtenus || 'Cliquez pour voir le détail de cette fiche.';
+
+    return `
+      <div class="card" onclick="openModal(${index})">
+        <div class="card-image">${icon}</div>
+        <div class="card-body">
+          <p class="card-type">${item.CP_Thematique || 'Projet'}</p>
+          <p class="card-title">${item.Title || 'Sans titre'}</p>
+          <p class="card-desc">${desc}</p>
+          <div class="card-meta">
+            <span class="card-client">${client || 'Multi-sites'}</span>
+            <span class="card-date">${date}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Ouvrir la modal
+function openModal(index) {
+  const filtered = currentFilter === 'tous' ? allResults : allResults.filter(i => i.CP_Thematique === currentFilter);
+  const item = filtered[index];
+  if (!item) return;
+
+  const client = Array.isArray(item.CP_SiteClient) ? item.CP_SiteClient.join(', ') : (item.CP_SiteClient || 'Non renseigné');
+
+  document.getElementById('modalType').textContent = item.CP_TypeProjet || item.CP_Thematique || 'Fiche Projet';
+  document.getElementById('modalTitle').textContent = item.Title || 'Sans titre';
+  document.getElementById('modalDesc').textContent = item.CP_DescriptionSolution || 'Description non renseignée.';
+  document.getElementById('modalGains').textContent = item.CP_GainsObtenus || 'Gains non renseignés.';
+  document.getElementById('modalLink').onclick = () => {
+    window.open(`${CONFIG.sharepointUrl}/Lists/${encodeURIComponent(CONFIG.listName)}/DispForm.aspx?ID=${item.ID}`, '_blank');
+  };
+
+  const meta = document.getElementById('modalMeta');
+  meta.innerHTML = `
+    <span class="modal-badge">🏢 ${client}</span>
+    <span class="modal-badge">📁 ${item.CP_Thematique || 'N/A'}</span>
+    <span class="modal-badge">🔄 ${item.CP_Reproductible || 'N/A'}</span>
+    ${item.Author ? `<span class="modal-badge">👤 ${item.Author.Title || ''}</span>` : ''}
+  `;
+
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+// Fermer la modal
+function closeModal(event) {
+  if (event.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('visible');
+  }
+}
+
+// États UI
+function showLoading() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('noResults').classList.remove('visible');
+  document.getElementById('cardsGrid').innerHTML = '';
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('visible');
+}
+function showNoResults() {
+  document.getElementById('noResults').classList.add('visible');
+  document.getElementById('cardsGrid').innerHTML = '';
+}
+
+// Données de démonstration (si API non accessible)
+function getDemoData(query) {
+  const allDemo = [
+    { ID: 1, Title: "Optimisation flux entrants — Airbus Toulouse", CP_Thematique: "Logistique", CP_TypeProjet: "Amélioration continue", CP_SiteClient: "Airbus", CP_DescriptionSolution: "Réorganisation des créneaux de livraison et mise en place d'un système de pré-annonce fournisseurs via EDI.", CP_GainsObtenus: "Réduction du temps de traitement de 38%. Gain financier annuel estimé : 42 000€.", CP_Reproductible: "Oui", Modified: "2024-06-01", Author: { Title: "J. Dupont" } },
+    { ID: 2, Title: "Réduction déchets emballages — EDF Paluel", CP_Thematique: "RSE", CP_TypeProjet: "RSE / Environnement", CP_SiteClient: "EDF", CP_DescriptionSolution: "Mise en place d'un système de consigne et réutilisation des emballages sur le site.", CP_GainsObtenus: "Réduction de 45% des déchets d'emballage. Économie annuelle : 18 000€.", CP_Reproductible: "Oui", Modified: "2024-05-15", Author: { Title: "A. Simon" } },
+    { ID: 3, Title: "Innovation robotique préparation commandes — Safran", CP_Thematique: "Innovation", CP_TypeProjet: "Innovation", CP_SiteClient: "Safran", CP_DescriptionSolution: "Déploiement d'un bras robotique pour la préparation des commandes de pièces critiques.", CP_GainsObtenus: "Productivité +30%, zéro erreur de picking sur 6 mois.", CP_Reproductible: "Avec adaptation", Modified: "2024-04-20", Author: { Title: "C. Renard" } },
+    { ID: 4, Title: "Guide onboarding chef de site logistique", CP_Thematique: "RH", CP_TypeProjet: "Formation", CP_SiteClient: "Multi-sites", CP_DescriptionSolution: "Parcours d'intégration standardisé pour les nouveaux chefs de site : 5 jours structurés avec mentoring.", CP_GainsObtenus: "Réduction du temps d'adaptation de 3 mois à 6 semaines.", CP_Reproductible: "Oui", Modified: "2024-03-10", Author: { Title: "M. Laurent" } },
+    { ID: 5, Title: "Optimisation tournées de collecte — TotalEnergies", CP_Thematique: "Logistique", CP_TypeProjet: "Amélioration continue", CP_SiteClient: "TotalEnergies", CP_DescriptionSolution: "Recalcul des tournées via algorithme d'optimisation, réduction du kilométrage journalier.", CP_GainsObtenus: "−22% de kilométrage. Économie carburant : 12 000€/an. Bilan CO2 amélioré.", CP_Reproductible: "Oui", Modified: "2024-02-28", Author: { Title: "P. Dubois" } },
+    { ID: 6, Title: "Démarche 5S zone de réception — Dillinger", CP_Thematique: "QSE", CP_TypeProjet: "Amélioration continue", CP_SiteClient: "Dillinger", CP_DescriptionSolution: "Application de la méthode 5S complète en zone de réception : tri, rangement, nettoyage, standardisation, discipline.", CP_GainsObtenus: "Réduction des accidents de travail de 60%. Audit QSE : 94/100.", CP_Reproductible: "Oui", Modified: "2024-01-15", Author: { Title: "F. Bernard" } },
+  ];
+
+  // Filtrer par query
+  const q = query.toLowerCase();
+  return allDemo.filter(item =>
+    item.Title.toLowerCase().includes(q) ||
+    (item.CP_Thematique && item.CP_Thematique.toLowerCase().includes(q)) ||
+    (item.CP_SiteClient && item.CP_SiteClient.toLowerCase().includes(q)) ||
+    (item.CP_DescriptionSolution && item.CP_DescriptionSolution.toLowerCase().includes(q)) ||
+    (item.CP_GainsObtenus && item.CP_GainsObtenus.toLowerCase().includes(q))
+  );
+}
+</script>
+
+</body>
+</html>
+EOF
+echo "done"
