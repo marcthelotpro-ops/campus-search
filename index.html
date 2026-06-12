@@ -4,407 +4,90 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Campus de la Performance — Onet L&P</title>
-
-<!-- MSAL.js pour authentification Microsoft -->
-
-
 <style>
-  :root {
-    --red: #E2001A;
-    --dark: #3C3C3C;
-    --mid: #6E6E6E;
-    --light: #F5F5F5;
-    --border: #E8E8E8;
-    --white: #FFFFFF;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08);
-    --radius: 8px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
-
-  /* HEADER */
-  .header { background: var(--dark); border-bottom: 3px solid var(--red); }
-  .header-inner { max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-  .logo-label { color: var(--red); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 3px; }
-  .logo-title { color: var(--white); font-size: 18px; font-weight: 400; }
-  .user-zone { display: flex; align-items: center; gap: 12px; }
-  .user-name { color: rgba(255,255,255,0.7); font-size: 13px; }
-  .btn-login { background: var(--red); color: var(--white); border: none; padding: 8px 18px; border-radius: 4px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-  .btn-login:hover { background: #B8001A; }
-  .btn-logout { background: transparent; color: rgba(255,255,255,0.5); border: 0.5px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-  .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
-  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; }
-
-  /* LOGIN SCREEN */
-  .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 40px; text-align: center; }
-  .login-icon { font-size: 56px; margin-bottom: 20px; }
-  .login-title { font-size: 26px; font-weight: 400; color: var(--dark); margin-bottom: 8px; }
-  .login-title span { color: var(--red); font-weight: 500; }
-  .login-sub { font-size: 14px; color: var(--mid); margin-bottom: 32px; max-width: 400px; line-height: 1.6; }
-  .btn-ms { background: #0078d4; color: #fff; border: none; padding: 14px 28px; border-radius: 6px; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; }
-  .btn-ms:hover { background: #005a9e; }
-  .ms-logo { width: 20px; height: 20px; }
-
-  /* HERO SEARCH */
-  .hero { background: var(--white); padding: 50px 24px 36px; text-align: center; border-bottom: 0.5px solid var(--border); }
-  .hero-title { font-size: 26px; font-weight: 400; color: var(--dark); margin-bottom: 8px; }
-  .hero-title span { color: var(--red); font-weight: 500; }
-  .hero-sub { font-size: 14px; color: var(--mid); margin-bottom: 28px; }
-  .search-container { max-width: 620px; margin: 0 auto; position: relative; }
-  .search-input { width: 100%; padding: 16px 56px 16px 20px; border: 2px solid var(--border); border-radius: 40px; font-size: 16px; color: var(--dark); outline: none; box-shadow: var(--shadow); transition: border-color 0.2s; }
-  .search-input:focus { border-color: var(--red); }
-  .search-input::placeholder { color: #BBBBBB; }
-  .search-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: var(--red); border: none; color: var(--white); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
-  .search-btn:hover { background: #B8001A; }
-  .search-tags { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .tag { background: var(--light); color: var(--mid); border: 0.5px solid var(--border); font-size: 12px; padding: 4px 12px; border-radius: 20px; cursor: pointer; transition: all 0.15s; }
-  .tag:hover { background: #FDECEA; color: var(--red); border-color: var(--red); }
-
-  /* FILTRES */
-  .filters { background: var(--white); border-bottom: 0.5px solid var(--border); padding: 10px 24px; display: none; }
-  .filters.visible { display: block; }
-  .filters-inner { max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .filter-label { font-size: 12px; color: var(--mid); }
-  .filter-btn { font-size: 12px; padding: 4px 12px; border: 0.5px solid var(--border); border-radius: 20px; background: var(--white); color: var(--dark); cursor: pointer; transition: all 0.15s; }
-  .filter-btn:hover, .filter-btn.active { background: var(--red); color: var(--white); border-color: var(--red); }
-  .results-count { margin-left: auto; font-size: 12px; color: var(--mid); }
-
-  /* RÉSULTATS */
-  .results-zone { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
-  .empty-state { text-align: center; padding: 60px 20px; }
-  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
-  .empty-title { font-size: 18px; color: var(--mid); margin-bottom: 8px; }
-  .empty-sub { font-size: 14px; color: #BBBBBB; }
-  .loading { text-align: center; padding: 40px; display: none; }
-  .loading.visible { display: block; }
-  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .no-results { text-align: center; padding: 40px; display: none; }
-  .no-results.visible { display: block; }
-
-  /* CARTES */
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-  .card { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border-top: 3px solid var(--red); }
-  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-  .card-image { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 40px; background: linear-gradient(135deg, #FDECEA 0%, #F5F5F5 100%); }
-  .card-body { padding: 14px; }
-  .card-type { font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 5px; }
-  .card-title { font-size: 13px; font-weight: 500; color: var(--dark); margin-bottom: 6px; line-height: 1.4; }
-  .card-desc { font-size: 12px; color: var(--mid); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .card-meta { display: flex; align-items: center; justify-content: space-between; }
-  .card-client { font-size: 11px; color: var(--mid); background: var(--light); padding: 2px 8px; border-radius: 20px; }
-  .card-date { font-size: 10px; color: #BBBBBB; }
-
-  /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.visible { display: flex; }
-  .modal { background: var(--white); border-radius: var(--radius); max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .modal-header { border-top: 4px solid var(--red); padding: 20px 24px 0; }
-  .modal-type { font-size: 11px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 6px; }
-  .modal-title { font-size: 20px; font-weight: 500; color: var(--dark); margin-bottom: 12px; }
-  .modal-meta { display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
-  .modal-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--light); color: var(--mid); }
-  .modal-body { padding: 20px 24px; }
-  .modal-section { margin-bottom: 20px; }
-  .modal-section-title { font-size: 11px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; border-left: 3px solid var(--red); padding-left: 8px; margin-bottom: 10px; }
-  .modal-text { font-size: 14px; color: var(--dark); line-height: 1.6; }
-  .modal-footer { padding: 16px 24px; border-top: 0.5px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
-  .btn-primary { background: var(--red); color: var(--white); border: none; padding: 8px 20px; border-radius: 4px; font-size: 13px; cursor: pointer; }
-  .btn-secondary { background: var(--white); color: var(--dark); border: 0.5px solid var(--border); padding: 8px 20px; border-radius: 4px; font-size: 13px; cursor: pointer; }
-
-  /* FOOTER */
-  .footer { background: var(--dark); padding: 16px 24px; text-align: center; margin-top: 40px; }
-  .footer-text { color: rgba(255,255,255,0.4); font-size: 11px; }
-
-  /* ERREUR */
-  .error-bar { background: #FDECEA; border: 0.5px solid #F5BABA; border-radius: 6px; padding: 10px 16px; margin: 12px 0; font-size: 13px; color: var(--red); display: none; }
-  .error-bar.visible { display: block; }
+  :root { --red:#E2001A; --dark:#3C3C3C; --mid:#6E6E6E; --light:#F5F5F5; --border:#E8E8E8; --white:#FFFFFF; --shadow:0 2px 8px rgba(0,0,0,0.08); --radius:8px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Arial,sans-serif; background:var(--light); color:var(--dark); min-height:100vh; }
+  .header { background:var(--dark); border-bottom:3px solid var(--red); }
+  .header-inner { max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .logo-label { color:var(--red); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:3px; }
+  .logo-title { color:var(--white); font-size:18px; font-weight:400; }
+  .user-zone { display:flex; align-items:center; gap:12px; }
+  .user-name { color:rgba(255,255,255,0.7); font-size:13px; }
+  .btn-login { background:var(--red); color:var(--white); border:none; padding:8px 18px; border-radius:4px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .btn-logout { background:transparent; color:rgba(255,255,255,0.5); border:0.5px solid rgba(255,255,255,0.2); padding:6px 12px; border-radius:4px; font-size:12px; cursor:pointer; }
+  .avatar { width:30px; height:30px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:600; }
+  .login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:40px; text-align:center; }
+  .login-icon { font-size:56px; margin-bottom:20px; }
+  .login-title { font-size:26px; font-weight:400; color:var(--dark); margin-bottom:8px; }
+  .login-title span { color:var(--red); font-weight:500; }
+  .login-sub { font-size:14px; color:var(--mid); margin-bottom:32px; max-width:400px; line-height:1.6; }
+  .btn-ms { background:#0078d4; color:#fff; border:none; padding:14px 28px; border-radius:6px; font-size:15px; cursor:pointer; display:flex; align-items:center; gap:10px; margin:0 auto; }
+  .btn-ms:hover { background:#005a9e; }
+  .hero { background:var(--white); padding:50px 24px 36px; text-align:center; border-bottom:0.5px solid var(--border); }
+  .hero-title { font-size:26px; font-weight:400; color:var(--dark); margin-bottom:8px; }
+  .hero-title span { color:var(--red); font-weight:500; }
+  .hero-sub { font-size:14px; color:var(--mid); margin-bottom:28px; }
+  .search-container { max-width:620px; margin:0 auto; position:relative; }
+  .search-input { width:100%; padding:16px 56px 16px 20px; border:2px solid var(--border); border-radius:40px; font-size:16px; outline:none; box-shadow:var(--shadow); transition:border-color 0.2s; }
+  .search-input:focus { border-color:var(--red); }
+  .search-input::placeholder { color:#BBBBBB; }
+  .search-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--red); border:none; color:#fff; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .search-tags { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .tag { background:var(--light); color:var(--mid); border:0.5px solid var(--border); font-size:12px; padding:4px 12px; border-radius:20px; cursor:pointer; transition:all 0.15s; }
+  .tag:hover { background:#FDECEA; color:var(--red); border-color:var(--red); }
+  .filters { background:var(--white); border-bottom:0.5px solid var(--border); padding:10px 24px; display:none; }
+  .filters.visible { display:block; }
+  .filters-inner { max-width:1200px; margin:0 auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .filter-label { font-size:12px; color:var(--mid); }
+  .filter-btn { font-size:12px; padding:4px 12px; border:0.5px solid var(--border); border-radius:20px; background:var(--white); color:var(--dark); cursor:pointer; transition:all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { background:var(--red); color:#fff; border-color:var(--red); }
+  .results-count { margin-left:auto; font-size:12px; color:var(--mid); }
+  .results-zone { max-width:1200px; margin:0 auto; padding:28px 24px; }
+  .empty-state { text-align:center; padding:60px 20px; }
+  .empty-icon { font-size:48px; margin-bottom:16px; opacity:0.3; }
+  .empty-title { font-size:18px; color:var(--mid); margin-bottom:8px; }
+  .empty-sub { font-size:14px; color:#BBBBBB; }
+  .loading { text-align:center; padding:40px; display:none; }
+  .loading.visible { display:block; }
+  .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--red); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .no-results { text-align:center; padding:40px; display:none; }
+  .no-results.visible { display:block; }
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
+  .card { background:var(--white); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; border-top:3px solid var(--red); }
+  .card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+  .card-image { width:100%; height:120px; display:flex; align-items:center; justify-content:center; font-size:40px; background:linear-gradient(135deg,#FDECEA 0%,#F5F5F5 100%); }
+  .card-body { padding:14px; }
+  .card-type { font-size:10px; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:5px; }
+  .card-title { font-size:13px; font-weight:500; color:var(--dark); margin-bottom:6px; line-height:1.4; }
+  .card-desc { font-size:12px; color:var(--mid); line-height:1.5; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-meta { display:flex; align-items:center; justify-content:space-between; }
+  .card-client { font-size:11px; color:var(--mid); background:var(--light); padding:2px 8px; border-radius:20px; }
+  .card-date { font-size:10px; color:#BBBBBB; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.visible { display:flex; }
+  .modal { background:var(--white); border-radius:var(--radius); max-width:680px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .modal-header { border-top:4px solid var(--red); padding:20px 24px 0; }
+  .modal-type { font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:6px; }
+  .modal-title { font-size:20px; font-weight:500; color:var(--dark); margin-bottom:12px; }
+  .modal-meta { display:flex; gap:10px; flex-wrap:wrap; padding-bottom:16px; border-bottom:0.5px solid var(--border); }
+  .modal-badge { font-size:11px; padding:3px 10px; border-radius:20px; background:var(--light); color:var(--mid); }
+  .modal-body { padding:20px 24px; }
+  .modal-section { margin-bottom:20px; }
+  .modal-section-title { font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; border-left:3px solid var(--red); padding-left:8px; margin-bottom:10px; }
+  .modal-text { font-size:14px; color:var(--dark); line-height:1.6; }
+  .modal-footer { padding:16px 24px; border-top:0.5px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
+  .btn-primary { background:var(--red); color:#fff; border:none; padding:8px 20px; border-radius:4px; font-size:13px; cursor:pointer; }
+  .btn-secondary { background:#fff; color:var(--dark); border:0.5px solid var(--border); padding:8px 20px; border-radius:4px; font-size:13px; cursor:pointer; }
+  .error-bar { background:#FDECEA; border:0.5px solid #F5BABA; border-radius:6px; padding:10px 16px; margin:12px auto; font-size:13px; color:var(--red); display:none; max-width:1200px; }
+  .error-bar.visible { display:block; }
+  .footer { background:var(--dark); padding:16px 24px; text-align:center; margin-top:40px; }
+  .footer-text { color:rgba(255,255,255,0.4); font-size:11px; }
 </style>
 </head>
 <body>
 
-<script>
-// =============================================
-// CONFIGURATION
-// =============================================
-const CONFIG = {
-  clientId:     "c30fe2be-5e1d-455e-bc3c-256ca1c55d70",
-  tenantId:     "fab0799d-74c6-4b96-8cde-faf83d9835d6",
-  sharepointUrl:"https://mjmconsulting322.sharepoint.com/sites/CP-Projets",
-  listName:     "Fiches Projets et Innovations",
-  columns:      "Id,Title,CP_StatutFiche,CP_Thematique,CP_SiteClient,CP_GainsObtenus,CP_DescriptionSolution,CP_Reproductible,CP_TypeProjet,Author/Title,Modified",
-  expand:       "Author",
-  maxResults:   100
-};
-
-// Icônes par thématique
-const icons = {
-  'Logistique': '📦', 'QSE': '🛡️', 'RH': '👥',
-  'IT': '💻', 'Finance': '💰', 'Commercial': '🤝',
-  'RSE': '🌿', 'Innovation': '🚀', 'default': '📋'
-};
-
-// =============================================
-// MSAL CONFIGURATION
-// =============================================
-const msalConfig = {
-  auth: {
-    clientId: CONFIG.clientId,
-    authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
-    redirectUri: "https://marcthelotpro-ops.github.io/campus-search"
-  },
-  cache: { cacheLocation: "sessionStorage" }
-};
-
-const msalInstance = new msal.PublicClientApplication(msalConfig);
-
-const loginRequest = {
-  scopes: [
-    `https://mjmconsulting322.sharepoint.com/AllSites.Read`,
-    "User.Read"
-  ]
-};
-
-let currentUser = null;
-let allResults = [];
-let currentFilter = 'tous';
-
-// =============================================
-// INITIALISATION
-// =============================================
-async function init() {
-  // Gérer le retour de redirection
-  await msalInstance.handleRedirectPromise();
-
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length > 0) {
-    currentUser = accounts[0];
-    showApp();
-  } else {
-    showLoginScreen();
-  }
-}
-
-// =============================================
-// LOGIN / LOGOUT
-// =============================================
-async function login() {
-  try {
-    await msalInstance.loginPopup(loginRequest);
-    const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) {
-      currentUser = accounts[0];
-      showApp();
-    }
-  } catch (e) {
-    console.error('Erreur login:', e);
-    showError("Erreur de connexion : " + e.message);
-  }
-}
-
-function logout() {
-  msalInstance.logoutPopup();
-  currentUser = null;
-  showLoginScreen();
-}
-
-// Obtenir le token d'accès SharePoint
-async function getToken() {
-  try {
-    const response = await msalInstance.acquireTokenSilent({
-      ...loginRequest,
-      account: currentUser
-    });
-    return response.accessToken;
-  } catch (e) {
-    const response = await msalInstance.acquireTokenPopup(loginRequest);
-    return response.accessToken;
-  }
-}
-
-// =============================================
-// AFFICHAGE
-// =============================================
-function showLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('appContent').style.display = 'none';
-  document.getElementById('userZone').innerHTML = `
-    <button class="btn-login" onclick="login()">
-      <svg class="ms-logo" viewBox="0 0 21 21" fill="none">
-        <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-        <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-      </svg>
-      Se connecter avec Microsoft
-    </button>
-  `;
-}
-
-function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appContent').style.display = 'block';
-
-  const initials = currentUser.name
-    ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()
-    : 'U';
-
-  document.getElementById('userZone').innerHTML = `
-    <span class="user-name">${currentUser.name || currentUser.username}</span>
-    <div class="avatar">${initials}</div>
-    <button class="btn-logout" onclick="logout()">Déconnexion</button>
-  `;
-}
-
-function showError(msg) {
-  const el = document.getElementById('errorBar');
-  el.textContent = msg;
-  el.classList.add('visible');
-  setTimeout(() => el.classList.remove('visible'), 5000);
-}
-
-// =============================================
-// RECHERCHE SHAREPOINT
-// =============================================
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doSearch();
-});
-
-function searchTag(keyword) {
-  document.getElementById('searchInput').value = keyword;
-  doSearch();
-}
-
-function setFilter(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCards(allResults);
-}
-
-async function doSearch() {
-  const query = document.getElementById('searchInput').value.trim();
-  if (!query) return;
-
-  showLoading();
-
-  try {
-    const token = await getToken();
-    const results = await fetchFromSharePoint(token, query);
-    allResults = results;
-    hideLoading();
-
-    if (results.length === 0) {
-      showNoResults();
-    } else {
-      document.getElementById('filtersBar').classList.add('visible');
-      renderCards(results);
-    }
-  } catch (error) {
-    hideLoading();
-    console.error('Erreur:', error);
-    showError("Erreur lors de la recherche : " + error.message);
-  }
-}
-
-async function fetchFromSharePoint(token, query) {
-  const q = query.replace(/'/g, "''");
-  const filter = `(substringof('${q}',Title) or substringof('${q}',CP_SiteClient))`;
-  const url = `${CONFIG.sharepointUrl}/_api/web/lists/getbytitle('${encodeURIComponent(CONFIG.listName)}')/items?$select=${CONFIG.columns}&$expand=${CONFIG.expand}&$filter=${encodeURIComponent(filter)}&$top=${CONFIG.maxResults}&$orderby=Modified desc`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/json;odata=nometadata',
-      'Authorization': `Bearer ${token}`
-    }
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`API SharePoint : ${response.status} — ${err}`);
-  }
-
-  const data = await response.json();
-  return data.value || [];
-}
-
-// =============================================
-// RENDU DES CARTES
-// =============================================
-function renderCards(items) {
-  const grid = document.getElementById('cardsGrid');
-  const count = document.getElementById('resultsCount');
-
-  let filtered = currentFilter === 'tous' ? items : items.filter(i => i.CP_Thematique === currentFilter);
-  count.textContent = `${filtered.length} fiche${filtered.length > 1 ? 's' : ''} trouvée${filtered.length > 1 ? 's' : ''}`;
-
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('noResults').classList.remove('visible');
-
-  if (filtered.length === 0) { grid.innerHTML = ''; showNoResults(); return; }
-
-  grid.innerHTML = filtered.map((item, index) => {
-    const icon = icons[item.CP_Thematique] || icons['default'];
-    const client = item.CP_SiteClient || 'Multi-sites';
-    const date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
-    const desc = item.CP_DescriptionSolution || item.CP_GainsObtenus || 'Cliquez pour voir le détail.';
-    return `
-      <div class="card" onclick="openModal(${index})">
-        <div class="card-image">${icon}</div>
-        <div class="card-body">
-          <p class="card-type">${item.CP_Thematique || 'Projet'}</p>
-          <p class="card-title">${item.Title || 'Sans titre'}</p>
-          <p class="card-desc">${desc}</p>
-          <div class="card-meta">
-            <span class="card-client">${client}</span>
-            <span class="card-date">${date}</span>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function openModal(index) {
-  const filtered = currentFilter === 'tous' ? allResults : allResults.filter(i => i.CP_Thematique === currentFilter);
-  const item = filtered[index];
-  if (!item) return;
-
-  document.getElementById('modalType').textContent = item.CP_TypeProjet || item.CP_Thematique || 'Fiche Projet';
-  document.getElementById('modalTitle').textContent = item.Title || 'Sans titre';
-  document.getElementById('modalDesc').textContent = item.CP_DescriptionSolution || 'Non renseignée.';
-  document.getElementById('modalGains').textContent = item.CP_GainsObtenus || 'Non renseignés.';
-  document.getElementById('modalLink').onclick = () => window.open(`${CONFIG.sharepointUrl}/Lists/${encodeURIComponent(CONFIG.listName)}/DispForm.aspx?ID=${item.Id}`, '_blank');
-  document.getElementById('modalMeta').innerHTML = `
-    <span class="modal-badge">🏢 ${item.CP_SiteClient || 'N/A'}</span>
-    <span class="modal-badge">📁 ${item.CP_Thematique || 'N/A'}</span>
-    <span class="modal-badge">🔄 ${item.CP_Reproductible || 'N/A'}</span>
-    ${item.Author ? `<span class="modal-badge">👤 ${item.Author.Title}</span>` : ''}
-  `;
-  document.getElementById('modalOverlay').classList.add('visible');
-}
-
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay'))
-    document.getElementById('modalOverlay').classList.remove('visible');
-}
-
-function showLoading() {
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('loading').classList.add('visible');
-  document.getElementById('noResults').classList.remove('visible');
-  document.getElementById('cardsGrid').innerHTML = '';
-}
-function hideLoading() { document.getElementById('loading').classList.remove('visible'); }
-function showNoResults() {
-  document.getElementById('noResults').classList.add('visible');
-  document.getElementById('cardsGrid').innerHTML = '';
-}
-
-// Lancer
-// init appelé après chargement MSAL
-</script>
-
-<!-- HEADER -->
 <div style="background:#E2001A;height:3px;"></div>
 <header class="header">
   <div class="header-inner">
@@ -416,13 +99,12 @@ function showNoResults() {
   </div>
 </header>
 
-<!-- LOGIN SCREEN -->
 <div id="loginScreen" style="display:none;">
   <div class="login-screen">
     <div class="login-icon">🎓</div>
     <h1 class="login-title">Campus de la <span>Performance</span></h1>
-    <p class="login-sub">Connectez-vous avec votre compte Microsoft 365 Onet pour accéder à la base de connaissances.</p>
-    <button class="btn-ms" onclick="login()">
+    <p class="login-sub">Connectez-vous avec votre compte Microsoft 365 pour accéder à la base de connaissances.</p>
+    <button class="btn-ms" id="loginBtn">
       <svg width="20" height="20" viewBox="0 0 21 21">
         <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
         <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
@@ -434,42 +116,37 @@ function showNoResults() {
   </div>
 </div>
 
-<!-- APP CONTENT -->
 <div id="appContent" style="display:none;">
-
-  <div id="errorBar" class="error-bar" style="max-width:1200px;margin:12px auto;"></div>
-
+  <div id="errorBar" class="error-bar"></div>
   <section class="hero">
     <h1 class="hero-title">Trouvez le <span>savoir-faire</span> qu'il vous faut</h1>
     <p class="hero-sub">Recherchez parmi les fiches projets, bonnes pratiques et innovations</p>
     <div class="search-container">
-      <input class="search-input" id="searchInput" type="text" placeholder="Ex : lean manufacturing, Airbus, réduction coûts..." autocomplete="off" />
-      <button class="search-btn" onclick="doSearch()">🔍</button>
+      <input class="search-input" id="searchInput" type="text" placeholder="Ex : lean, Airbus, réduction coûts..." autocomplete="off" />
+      <button class="search-btn" id="searchBtn">🔍</button>
     </div>
     <div class="search-tags">
-      <span class="tag" onclick="searchTag('Airbus')">Airbus</span>
-      <span class="tag" onclick="searchTag('Safran')">Safran</span>
-      <span class="tag" onclick="searchTag('EDF')">EDF</span>
-      <span class="tag" onclick="searchTag('lean')">Lean</span>
-      <span class="tag" onclick="searchTag('RSE')">RSE</span>
-      <span class="tag" onclick="searchTag('innovation')">Innovation</span>
-      <span class="tag" onclick="searchTag('onboarding')">Onboarding</span>
+      <span class="tag" data-kw="Airbus">Airbus</span>
+      <span class="tag" data-kw="Safran">Safran</span>
+      <span class="tag" data-kw="EDF">EDF</span>
+      <span class="tag" data-kw="lean">Lean</span>
+      <span class="tag" data-kw="RSE">RSE</span>
+      <span class="tag" data-kw="innovation">Innovation</span>
+      <span class="tag" data-kw="onboarding">Onboarding</span>
     </div>
   </section>
-
   <div class="filters" id="filtersBar">
     <div class="filters-inner">
       <span class="filter-label">Filtrer :</span>
-      <button class="filter-btn active" onclick="setFilter('tous', this)">Tous</button>
-      <button class="filter-btn" onclick="setFilter('Logistique', this)">Logistique</button>
-      <button class="filter-btn" onclick="setFilter('QSE', this)">QSE</button>
-      <button class="filter-btn" onclick="setFilter('RH', this)">RH</button>
-      <button class="filter-btn" onclick="setFilter('Innovation', this)">Innovation</button>
-      <button class="filter-btn" onclick="setFilter('RSE', this)">RSE</button>
+      <button class="filter-btn active" data-filter="tous">Tous</button>
+      <button class="filter-btn" data-filter="Logistique">Logistique</button>
+      <button class="filter-btn" data-filter="QSE">QSE</button>
+      <button class="filter-btn" data-filter="RH">RH</button>
+      <button class="filter-btn" data-filter="Innovation">Innovation</button>
+      <button class="filter-btn" data-filter="RSE">RSE</button>
       <span class="results-count" id="resultsCount"></span>
     </div>
   </div>
-
   <div class="results-zone">
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">🔍</div>
@@ -487,11 +164,9 @@ function showNoResults() {
     </div>
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
-
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
       <p class="modal-type" id="modalType"></p>
@@ -509,7 +184,7 @@ function showNoResults() {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="document.getElementById('modalOverlay').classList.remove('visible')">Fermer</button>
+      <button class="btn-secondary" id="modalClose">Fermer</button>
       <button class="btn-primary" id="modalLink">Voir la fiche complète →</button>
     </div>
   </div>
@@ -519,9 +194,236 @@ function showNoResults() {
   <p class="footer-text">Campus de la Performance — Onet Logistique &amp; Production © 2024</p>
 </footer>
 
+<!-- MSAL chargé en premier, TOUT le JS après -->
 <script src="./msal.js"></script>
 <script>
-  window.addEventListener('load', initMsal);
+// Config
+var CONFIG = {
+  clientId:    "c30fe2be-5e1d-455e-bc3c-256ca1c55d70",
+  tenantId:    "fab0799d-74c6-4b96-8cde-faf83d9835d6",
+  tenantName:  "mjmconsulting322",
+  siteAlias:   "CP-Projets",
+  listName:    "Fiches Projets et Innovations",
+  redirectUri: "https://marcthelotpro-ops.github.io/campus-search/"
+};
+
+var ICONS = {
+  'Logistique':'📦','QSE':'🛡️','RH':'👥','IT':'💻',
+  'Finance':'💰','Commercial':'🤝','RSE':'🌿','Innovation':'🚀','default':'📋'
+};
+
+var msalInstance = null;
+var currentUser = null;
+var allResults = [];
+var currentFilter = 'tous';
+var siteId = null;
+
+// Init MSAL
+function initApp() {
+  msalInstance = new msal.PublicClientApplication({
+    auth: {
+      clientId: CONFIG.clientId,
+      authority: "https://login.microsoftonline.com/" + CONFIG.tenantId,
+      redirectUri: CONFIG.redirectUri
+    },
+    cache: { cacheLocation: "sessionStorage" }
+  });
+
+  msalInstance.handleRedirectPromise().then(function() {
+    var accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      currentUser = accounts[0];
+      showApp();
+    } else {
+      showLogin();
+    }
+  }).catch(function(e) {
+    console.error(e);
+    showLogin();
+  });
+
+  // Events
+  document.getElementById('loginBtn').onclick = doLogin;
+  document.getElementById('searchBtn').onclick = doSearch;
+  document.getElementById('searchInput').onkeydown = function(e) { if(e.key==='Enter') doSearch(); };
+  document.getElementById('modalClose').onclick = function() { document.getElementById('modalOverlay').classList.remove('visible'); };
+  document.getElementById('modalOverlay').onclick = function(e) { if(e.target===this) this.classList.remove('visible'); };
+
+  document.querySelectorAll('.tag').forEach(function(t) {
+    t.onclick = function() {
+      document.getElementById('searchInput').value = this.dataset.kw;
+      doSearch();
+    };
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.onclick = function() {
+      currentFilter = this.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(function(x) { x.classList.remove('active'); });
+      this.classList.add('active');
+      renderCards(allResults);
+    };
+  });
+}
+
+// Auth
+function doLogin() {
+  msalInstance.loginPopup({ scopes: ["User.Read","Sites.Read.All"] })
+    .then(function() {
+      var accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) { currentUser = accounts[0]; showApp(); }
+    })
+    .catch(function(e) { showError("Erreur connexion : " + e.message); });
+}
+
+function doLogout() {
+  msalInstance.logoutPopup();
+  currentUser = null;
+  showLogin();
+}
+
+function getToken() {
+  var req = { scopes: ["Sites.Read.All"], account: currentUser };
+  return msalInstance.acquireTokenSilent(req)
+    .catch(function() { return msalInstance.acquireTokenPopup(req); })
+    .then(function(r) { return r.accessToken; });
+}
+
+// UI
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('userZone').innerHTML = '';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
+  var name = currentUser.name || currentUser.username;
+  var initials = name.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+  document.getElementById('userZone').innerHTML =
+    '<span class="user-name">' + name + '</span>' +
+    '<div class="avatar">' + initials + '</div>' +
+    '<button class="btn-logout" onclick="doLogout()">Déconnexion</button>';
+}
+
+function showError(msg) {
+  var el = document.getElementById('errorBar');
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function(){ el.classList.remove('visible'); }, 6000);
+}
+
+// Search
+function doSearch() {
+  var query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('noResults').classList.remove('visible');
+  document.getElementById('cardsGrid').innerHTML = '';
+
+  getToken().then(function(token) {
+    return getSiteId(token).then(function(id) {
+      var url = "https://graph.microsoft.com/v1.0/sites/" + id +
+        "/lists/" + encodeURIComponent(CONFIG.listName) +
+        "/items?expand=fields(select=id,Title,CP_StatutFiche,CP_Thematique,CP_SiteClient,CP_GainsObtenus,CP_DescriptionSolution,CP_Reproductible,CP_TypeProjet,Modified)&$top=200";
+
+      return fetch(url, { headers: { Authorization: "Bearer " + token } });
+    });
+  }).then(function(r) {
+    if (!r.ok) throw new Error("Graph API : " + r.status);
+    return r.json();
+  }).then(function(data) {
+    var q = document.getElementById('searchInput').value.trim().toLowerCase();
+    var items = (data.value || []).map(function(i){ return i.fields; });
+    allResults = items.filter(function(item) {
+      return (item.Title && item.Title.toLowerCase().includes(q)) ||
+             (item.CP_SiteClient && item.CP_SiteClient.toLowerCase().includes(q)) ||
+             (item.CP_Thematique && item.CP_Thematique.toLowerCase().includes(q)) ||
+             (item.CP_DescriptionSolution && item.CP_DescriptionSolution.toLowerCase().includes(q)) ||
+             (item.CP_GainsObtenus && item.CP_GainsObtenus.toLowerCase().includes(q));
+    });
+    document.getElementById('loading').classList.remove('visible');
+    if (!allResults.length) {
+      document.getElementById('noResults').classList.add('visible');
+    } else {
+      document.getElementById('filtersBar').classList.add('visible');
+      renderCards(allResults);
+    }
+  }).catch(function(e) {
+    document.getElementById('loading').classList.remove('visible');
+    showError("Erreur : " + e.message);
+    console.error(e);
+  });
+}
+
+function getSiteId(token) {
+  if (siteId) return Promise.resolve(siteId);
+  var url = "https://graph.microsoft.com/v1.0/sites/" + CONFIG.tenantName + ".sharepoint.com:/sites/" + CONFIG.siteAlias;
+  return fetch(url, { headers: { Authorization: "Bearer " + token } })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { siteId = d.id; return siteId; });
+}
+
+function renderCards(items) {
+  var filtered = currentFilter === 'tous' ? items : items.filter(function(i){ return i.CP_Thematique === currentFilter; });
+  document.getElementById('resultsCount').textContent = filtered.length + ' fiche' + (filtered.length>1?'s':'') + ' trouvée' + (filtered.length>1?'s':'');
+  document.getElementById('noResults').classList.remove('visible');
+
+  if (!filtered.length) {
+    document.getElementById('cardsGrid').innerHTML = '';
+    document.getElementById('noResults').classList.add('visible');
+    return;
+  }
+
+  document.getElementById('cardsGrid').innerHTML = filtered.map(function(item, i) {
+    var icon = ICONS[item.CP_Thematique] || ICONS['default'];
+    var client = item.CP_SiteClient || 'Multi-sites';
+    var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
+    var desc = item.CP_DescriptionSolution || item.CP_GainsObtenus || 'Cliquez pour voir le détail.';
+    return '<div class="card" onclick="openModal(' + i + ')">' +
+      '<div class="card-image">' + icon + '</div>' +
+      '<div class="card-body">' +
+        '<p class="card-type">' + (item.CP_Thematique||'Projet') + '</p>' +
+        '<p class="card-title">' + (item.Title||'Sans titre') + '</p>' +
+        '<p class="card-desc">' + desc + '</p>' +
+        '<div class="card-meta">' +
+          '<span class="card-client">' + client + '</span>' +
+          '<span class="card-date">' + date + '</span>' +
+        '</div></div></div>';
+  }).join('');
+}
+
+function openModal(i) {
+  var filtered = currentFilter === 'tous' ? allResults : allResults.filter(function(x){ return x.CP_Thematique === currentFilter; });
+  var item = filtered[i];
+  if (!item) return;
+  document.getElementById('modalType').textContent = item.CP_TypeProjet || item.CP_Thematique || 'Fiche Projet';
+  document.getElementById('modalTitle').textContent = item.Title || 'Sans titre';
+  document.getElementById('modalDesc').textContent = item.CP_DescriptionSolution || 'Non renseignée.';
+  document.getElementById('modalGains').textContent = item.CP_GainsObtenus || 'Non renseignés.';
+  document.getElementById('modalLink').onclick = function() {
+    window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/Lists/' + encodeURIComponent(CONFIG.listName) + '/DispForm.aspx?ID=' + item.id, '_blank');
+  };
+  document.getElementById('modalMeta').innerHTML =
+    '<span class="modal-badge">🏢 ' + (item.CP_SiteClient||'N/A') + '</span>' +
+    '<span class="modal-badge">📁 ' + (item.CP_Thematique||'N/A') + '</span>' +
+    '<span class="modal-badge">🔄 ' + (item.CP_Reproductible||'N/A') + '</span>';
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+// Démarrer quand DOM prêt
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof msal !== 'undefined') {
+    initApp();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginScreen').querySelector('p').textContent = 'Erreur : bibliothèque MSAL non chargée. Vérifiez que msal.js est présent dans le repo.';
+  }
+});
 </script>
+
 </body>
 </html>
