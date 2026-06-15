@@ -339,8 +339,9 @@ function doSearch() {
     var q = document.getElementById('searchInput').value.trim().toLowerCase();
     var items = (data.value || []).map(function(i){ return i.fields; });
     allResults = items.filter(function(item) {
+      var siteClientStr = Array.isArray(item.SiteClient) ? item.SiteClient.join(' ') : (item.SiteClient || '');
       return (item.Title && item.Title.toLowerCase().includes(q)) ||
-             (item.SiteClient && item.SiteClient.toLowerCase().includes(q)) ||
+             (siteClientStr && siteClientStr.toLowerCase().includes(q)) ||
              (item.Th_x00e9_matique && item.Th_x00e9_matique.toLowerCase().includes(q)) ||
              (item.DescriptionSolution && item.DescriptionSolution.toLowerCase().includes(q)) ||
              (item.Gainsobtenus && item.Gainsobtenus.toLowerCase().includes(q));
@@ -380,7 +381,7 @@ function renderCards(items) {
 
   document.getElementById('cardsGrid').innerHTML = filtered.map(function(item, i) {
     var icon = ICONS[item.Th_x00e9_matique] || ICONS['default'];
-    var client = item.SiteClient || 'Multi-sites';
+    var client = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
     var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
     var desc = item.DescriptionSolution || item.Gainsobtenus || 'Cliquez pour voir le détail.';
     return '<div class="card" onclick="openModal(' + i + ')">' +
@@ -407,8 +408,9 @@ function openModal(i) {
   document.getElementById('modalLink').onclick = function() {
     window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/Lists/' + encodeURIComponent(CONFIG.listName) + '/DispForm.aspx?ID=' + item.id, '_blank');
   };
+  var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'N/A');
   document.getElementById('modalMeta').innerHTML =
-    '<span class="modal-badge">🏢 ' + (item.SiteClient||'N/A') + '</span>' +
+    '<span class="modal-badge">🏢 ' + clientDisplay + '</span>' +
     '<span class="modal-badge">📁 ' + (item.Th_x00e9_matique||'N/A') + '</span>' +
     '<span class="modal-badge">🔄 ' + (item.CP_Reproductible||'N/A') + '</span>';
   document.getElementById('modalOverlay').classList.add('visible');
