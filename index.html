@@ -328,7 +328,7 @@ function doSearch() {
     return getSiteId(token).then(function(id) {
       var url = "https://graph.microsoft.com/v1.0/sites/" + id +
         "/lists/" + encodeURIComponent(CONFIG.listName) +
-        "/items?expand=fields(select=id,Title,CP_StatutFiche,CP_Thematique,CP_SiteClient,CP_GainsObtenus,CP_DescriptionSolution,CP_Reproductible,CP_TypeProjet,Modified)&$top=200";
+        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,Modified)&$top=200";
 
       return fetch(url, { headers: { Authorization: "Bearer " + token } });
     });
@@ -340,10 +340,10 @@ function doSearch() {
     var items = (data.value || []).map(function(i){ return i.fields; });
     allResults = items.filter(function(item) {
       return (item.Title && item.Title.toLowerCase().includes(q)) ||
-             (item.CP_SiteClient && item.CP_SiteClient.toLowerCase().includes(q)) ||
-             (item.CP_Thematique && item.CP_Thematique.toLowerCase().includes(q)) ||
-             (item.CP_DescriptionSolution && item.CP_DescriptionSolution.toLowerCase().includes(q)) ||
-             (item.CP_GainsObtenus && item.CP_GainsObtenus.toLowerCase().includes(q));
+             (item.SiteClient && item.SiteClient.toLowerCase().includes(q)) ||
+             (item.Th_x00e9_matique && item.Th_x00e9_matique.toLowerCase().includes(q)) ||
+             (item.DescriptionSolution && item.DescriptionSolution.toLowerCase().includes(q)) ||
+             (item.Gainsobtenus && item.Gainsobtenus.toLowerCase().includes(q));
     });
     document.getElementById('loading').classList.remove('visible');
     if (!allResults.length) {
@@ -368,7 +368,7 @@ function getSiteId(token) {
 }
 
 function renderCards(items) {
-  var filtered = currentFilter === 'tous' ? items : items.filter(function(i){ return i.CP_Thematique === currentFilter; });
+  var filtered = currentFilter === 'tous' ? items : items.filter(function(i){ return i.Th_x00e9_matique === currentFilter; });
   document.getElementById('resultsCount').textContent = filtered.length + ' fiche' + (filtered.length>1?'s':'') + ' trouvée' + (filtered.length>1?'s':'');
   document.getElementById('noResults').classList.remove('visible');
 
@@ -379,14 +379,14 @@ function renderCards(items) {
   }
 
   document.getElementById('cardsGrid').innerHTML = filtered.map(function(item, i) {
-    var icon = ICONS[item.CP_Thematique] || ICONS['default'];
-    var client = item.CP_SiteClient || 'Multi-sites';
+    var icon = ICONS[item.Th_x00e9_matique] || ICONS['default'];
+    var client = item.SiteClient || 'Multi-sites';
     var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
-    var desc = item.CP_DescriptionSolution || item.CP_GainsObtenus || 'Cliquez pour voir le détail.';
+    var desc = item.DescriptionSolution || item.Gainsobtenus || 'Cliquez pour voir le détail.';
     return '<div class="card" onclick="openModal(' + i + ')">' +
       '<div class="card-image">' + icon + '</div>' +
       '<div class="card-body">' +
-        '<p class="card-type">' + (item.CP_Thematique||'Projet') + '</p>' +
+        '<p class="card-type">' + (item.Th_x00e9_matique||'Projet') + '</p>' +
         '<p class="card-title">' + (item.Title||'Sans titre') + '</p>' +
         '<p class="card-desc">' + desc + '</p>' +
         '<div class="card-meta">' +
@@ -397,19 +397,19 @@ function renderCards(items) {
 }
 
 function openModal(i) {
-  var filtered = currentFilter === 'tous' ? allResults : allResults.filter(function(x){ return x.CP_Thematique === currentFilter; });
+  var filtered = currentFilter === 'tous' ? allResults : allResults.filter(function(x){ return x.Th_x00e9_matique === currentFilter; });
   var item = filtered[i];
   if (!item) return;
-  document.getElementById('modalType').textContent = item.CP_TypeProjet || item.CP_Thematique || 'Fiche Projet';
+  document.getElementById('modalType').textContent = item.Typedeprojet || item.Th_x00e9_matique || 'Fiche Projet';
   document.getElementById('modalTitle').textContent = item.Title || 'Sans titre';
-  document.getElementById('modalDesc').textContent = item.CP_DescriptionSolution || 'Non renseignée.';
-  document.getElementById('modalGains').textContent = item.CP_GainsObtenus || 'Non renseignés.';
+  document.getElementById('modalDesc').textContent = item.DescriptionSolution || 'Non renseignée.';
+  document.getElementById('modalGains').textContent = item.Gainsobtenus || 'Non renseignés.';
   document.getElementById('modalLink').onclick = function() {
     window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/Lists/' + encodeURIComponent(CONFIG.listName) + '/DispForm.aspx?ID=' + item.id, '_blank');
   };
   document.getElementById('modalMeta').innerHTML =
-    '<span class="modal-badge">🏢 ' + (item.CP_SiteClient||'N/A') + '</span>' +
-    '<span class="modal-badge">📁 ' + (item.CP_Thematique||'N/A') + '</span>' +
+    '<span class="modal-badge">🏢 ' + (item.SiteClient||'N/A') + '</span>' +
+    '<span class="modal-badge">📁 ' + (item.Th_x00e9_matique||'N/A') + '</span>' +
     '<span class="modal-badge">🔄 ' + (item.CP_Reproductible||'N/A') + '</span>';
   document.getElementById('modalOverlay').classList.add('visible');
 }
