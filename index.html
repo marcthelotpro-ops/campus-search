@@ -357,6 +357,7 @@ function doSearch() {
       return (item.Title && item.Title.toLowerCase().includes(q)) ||
              (siteClientStr && siteClientStr.toLowerCase().includes(q)) ||
              (item.Th_x00e9_matique && item.Th_x00e9_matique.toLowerCase().includes(q)) ||
+             (item.Typedeprojet && item.Typedeprojet.toLowerCase().includes(q)) ||
              (item.DescriptionSolution && item.DescriptionSolution.toLowerCase().includes(q)) ||
              (item.Gainsobtenus && item.Gainsobtenus.toLowerCase().includes(q));
     });
