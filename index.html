@@ -396,7 +396,7 @@ function renderCards(items) {
       } catch(e) { photoUrl = null; }
     }
     var imageHtml = photoUrl
-      ? '<img src="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" />'
+      ? '<img data-photo-url="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" />'
       : icon;
     return '<div class="card" onclick="openModal(' + i + ')">' +
       '<div class="card-image">' + imageHtml + '</div>' +
@@ -409,6 +409,27 @@ function renderCards(items) {
           '<span class="card-date">' + date + '</span>' +
         '</div></div></div>';
   }).join('');
+
+  loadCardImages();
+}
+
+function loadCardImages() {
+  var imgs = document.querySelectorAll('#cardsGrid img[data-photo-url]');
+  imgs.forEach(function(img) {
+    var url = img.getAttribute('data-photo-url');
+    getToken().then(function(token) {
+      return fetch(url, { headers: { Authorization: "Bearer " + token } });
+    }).then(function(r) {
+      if (!r.ok) throw new Error('image fetch failed: ' + r.status);
+      return r.blob();
+    }).then(function(blob) {
+      img.src = URL.createObjectURL(blob);
+    }).catch(function(e) {
+      console.warn('Image non chargée:', url, e.message);
+      // Laisser l'icône par défaut visible (parent affichera le fond dégradé)
+      img.style.display = 'none';
+    });
+  });
 }
 
 function openModal(i) {
