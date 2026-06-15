@@ -385,7 +385,16 @@ function renderCards(items) {
     var client = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
     var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
     var desc = item.DescriptionSolution || item.Gainsobtenus || 'Cliquez pour voir le détail.';
-    var photoUrl = (item.Photoprincipale && item.Photoprincipale.Url) ? item.Photoprincipale.Url : null;
+    var photoUrl = null;
+    if (item.Photoprincipale) {
+      try {
+        var photoData = JSON.parse(item.Photoprincipale);
+        if (photoData.fileName) {
+          photoUrl = "https://" + CONFIG.tenantName + ".sharepoint.com/sites/" + CONFIG.siteAlias +
+            "/Lists/Liste%20Projets%20et%20Innovations/Attachments/" + item.id + "/" + encodeURIComponent(photoData.fileName);
+        }
+      } catch(e) { photoUrl = null; }
+    }
     var imageHtml = photoUrl
       ? '<img src="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" />'
       : icon;
