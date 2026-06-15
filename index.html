@@ -329,7 +329,7 @@ function doSearch() {
     return getSiteId(token).then(function(id) {
       var url = "https://graph.microsoft.com/v1.0/sites/" + id +
         "/lists/" + encodeURIComponent(CONFIG.listName) +
-        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,Photoprincipale,Modified)&$top=200";
+        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,LienPhoto,Modified)&$top=200";
 
       return fetch(url, { headers: { Authorization: "Bearer " + token } });
     });
@@ -385,18 +385,9 @@ function renderCards(items) {
     var client = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
     var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
     var desc = item.DescriptionSolution || item.Gainsobtenus || 'Cliquez pour voir le détail.';
-    var photoUrl = null;
-    if (item.Photoprincipale) {
-      try {
-        var photoData = JSON.parse(item.Photoprincipale);
-        if (photoData.fileName) {
-          photoUrl = "https://" + CONFIG.tenantName + ".sharepoint.com/sites/" + CONFIG.siteAlias +
-            "/Lists/Liste%20Projets%20et%20Innovations/Attachments/" + item.id + "/" + encodeURIComponent(photoData.fileName);
-        }
-      } catch(e) { photoUrl = null; }
-    }
+    var photoUrl = item.LienPhoto || null;
     var imageHtml = photoUrl
-      ? '<img data-photo-url="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" />'
+      ? '<img src="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" onerror="this.style.display=\'none\'" />'
       : icon;
     return '<div class="card" onclick="openModal(' + i + ')">' +
       '<div class="card-image">' + imageHtml + '</div>' +
@@ -409,27 +400,6 @@ function renderCards(items) {
           '<span class="card-date">' + date + '</span>' +
         '</div></div></div>';
   }).join('');
-
-  loadCardImages();
-}
-
-function loadCardImages() {
-  var imgs = document.querySelectorAll('#cardsGrid img[data-photo-url]');
-  imgs.forEach(function(img) {
-    var url = img.getAttribute('data-photo-url');
-    getToken().then(function(token) {
-      return fetch(url, { headers: { Authorization: "Bearer " + token } });
-    }).then(function(r) {
-      if (!r.ok) throw new Error('image fetch failed: ' + r.status);
-      return r.blob();
-    }).then(function(blob) {
-      img.src = URL.createObjectURL(blob);
-    }).catch(function(e) {
-      console.warn('Image non chargée:', url, e.message);
-      // Laisser l'icône par défaut visible (parent affichera le fond dégradé)
-      img.style.display = 'none';
-    });
-  });
 }
 
 function openModal(i) {
