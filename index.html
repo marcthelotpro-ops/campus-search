@@ -57,7 +57,8 @@
   .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
   .card { background:var(--white); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; border-top:3px solid var(--red); }
   .card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
-  .card-image { width:100%; height:120px; display:flex; align-items:center; justify-content:center; font-size:40px; background:linear-gradient(135deg,#FDECEA 0%,#F5F5F5 100%); }
+  .card-image { width:100%; height:120px; display:flex; align-items:center; justify-content:center; font-size:40px; background:linear-gradient(135deg,#FDECEA 0%,#F5F5F5 100%); background-size:cover; background-position:center; }
+  .card-image img { width:100%; height:100%; object-fit:cover; display:block; }
   .card-body { padding:14px; }
   .card-type { font-size:10px; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:5px; }
   .card-title { font-size:13px; font-weight:500; color:var(--dark); margin-bottom:6px; line-height:1.4; }
@@ -328,7 +329,7 @@ function doSearch() {
     return getSiteId(token).then(function(id) {
       var url = "https://graph.microsoft.com/v1.0/sites/" + id +
         "/lists/" + encodeURIComponent(CONFIG.listName) +
-        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,Modified)&$top=200";
+        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,Photoprincipale,Modified)&$top=200";
 
       return fetch(url, { headers: { Authorization: "Bearer " + token } });
     });
@@ -384,8 +385,12 @@ function renderCards(items) {
     var client = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
     var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
     var desc = item.DescriptionSolution || item.Gainsobtenus || 'Cliquez pour voir le détail.';
+    var photoUrl = (item.Photoprincipale && item.Photoprincipale.Url) ? item.Photoprincipale.Url : null;
+    var imageHtml = photoUrl
+      ? '<img src="' + photoUrl + '" alt="' + (item.Title||'') + '" loading="lazy" />'
+      : icon;
     return '<div class="card" onclick="openModal(' + i + ')">' +
-      '<div class="card-image">' + icon + '</div>' +
+      '<div class="card-image">' + imageHtml + '</div>' +
       '<div class="card-body">' +
         '<p class="card-type">' + (item.Th_x00e9_matique||'Projet') + '</p>' +
         '<p class="card-title">' + (item.Title||'Sans titre') + '</p>' +
