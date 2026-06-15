@@ -82,9 +82,9 @@
   .modal-section { margin-bottom:20px; }
   .modal-section-title { font-size:11px; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; border-left:3px solid var(--red); padding-left:8px; margin-bottom:10px; }
   .modal-text { font-size:14px; color:var(--dark); line-height:1.6; }
-  .modal-footer { padding:16px 24px; border-top:0.5px solid var(--border); display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-  .btn-primary { background:var(--red); color:#fff; border:none; padding:8px 20px; border-radius:4px; font-size:13px; cursor:pointer; }
-  .btn-secondary { background:#fff; color:var(--dark); border:0.5px solid var(--border); padding:8px 20px; border-radius:4px; font-size:13px; cursor:pointer; }
+  .modal-footer { padding:14px 18px; border-top:0.5px solid var(--border); display:flex; gap:6px; justify-content:flex-end; flex-wrap:nowrap; overflow-x:auto; }
+  .btn-primary { background:var(--red); color:#fff; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .btn-secondary { background:#fff; color:var(--dark); border:0.5px solid var(--border); padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; white-space:nowrap; }
   .error-bar { background:#FDECEA; border:0.5px solid #F5BABA; border-radius:6px; padding:10px 16px; margin:12px auto; font-size:13px; color:var(--red); display:none; max-width:1200px; }
   .error-bar.visible { display:block; }
   .footer { background:var(--dark); padding:16px 24px; text-align:center; margin-top:40px; }
@@ -195,9 +195,10 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" id="modalClose">Fermer</button>
-      <button class="btn-primary" id="btnTechnique">Fiche format technique →</button>
-      <button class="btn-primary" id="btnCommerce">Fiche pour Commerce →</button>
-      <button class="btn-primary" id="modalLink">Voir la fiche complète →</button>
+      <button class="btn-secondary" id="modalSharepoint">Ouvrir dans SharePoint</button>
+      <button class="btn-primary" id="btnTechnique">Fiche technique →</button>
+      <button class="btn-primary" id="btnCommerce">Fiche commerce →</button>
+      <button class="btn-primary" id="modalLink">Fiche complète →</button>
     </div>
   </div>
 </div>
@@ -433,11 +434,12 @@ function openModal(i) {
     photoWrap.style.display = 'none';
   }
 
-  document.getElementById('modalLink').onclick = function() {
+  document.getElementById('modalSharepoint').onclick = function() {
     window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/_layouts/15/listform.aspx?PageType=4&ListId=%7B' + CONFIG.listName + '%7D&ID=' + item.id, '_blank');
   };
   document.getElementById('btnTechnique').onclick = function() { generatePdf(item, 'technique'); };
   document.getElementById('btnCommerce').onclick = function() { generatePdf(item, 'commerce'); };
+  document.getElementById('modalLink').onclick = function() { generatePdf(item, 'complet'); };
 
   var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'N/A');
   document.getElementById('modalMeta').innerHTML =
@@ -603,15 +605,22 @@ function generatePdf(item, type) {
     imgEl.crossOrigin = 'Anonymous';
     imgEl.onload = function() {
       try {
+        // Taille d'affichage finale dans le PDF (mm)
+        var displayW = 50, displayH = 35;
+        var aspect = imgEl.width / imgEl.height;
+        if (aspect > displayW/displayH) { displayH = displayW / aspect; } else { displayW = displayH * aspect; }
+
+        // Rendu du canvas en haute résolution (3x) pour éviter le flou
+        var scale = 3;
         var canvas = document.createElement('canvas');
-        var maxW = 50, maxH = 35;
-        var ratio = Math.min(maxW / imgEl.width, maxH / imgEl.height);
-        canvas.width = imgEl.width * ratio;
-        canvas.height = imgEl.height * ratio;
+        canvas.width = imgEl.width * scale > 1200 ? 1200 : imgEl.width * scale;
+        canvas.height = canvas.width / aspect;
         var ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
-        var imgData = canvas.toDataURL('image/jpeg', 0.85);
-        doc.addImage(imgData, 'JPEG', pageW - margin - canvas.width, 8, canvas.width, canvas.height);
+        var imgData = canvas.toDataURL('image/jpeg', 0.92);
+        doc.addImage(imgData, 'JPEG', pageW - margin - displayW, 8, displayW, displayH);
       } catch(e) {
         console.warn('Photo non incluse dans le PDF (CORS) :', e.message);
       }
