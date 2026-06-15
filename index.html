@@ -406,7 +406,7 @@ function openModal(i) {
   document.getElementById('modalDesc').textContent = item.DescriptionSolution || 'Non renseignée.';
   document.getElementById('modalGains').textContent = item.Gainsobtenus || 'Non renseignés.';
   document.getElementById('modalLink').onclick = function() {
-    window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/Lists/' + encodeURIComponent(CONFIG.listName) + '/DispForm.aspx?ID=' + item.id, '_blank');
+    window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/_layouts/15/listform.aspx?PageType=4&ListId=%7B' + CONFIG.listName + '%7D&ID=' + item.id, '_blank');
   };
   var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'N/A');
   document.getElementById('modalMeta').innerHTML =
