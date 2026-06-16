@@ -342,7 +342,7 @@ function doSearch() {
     return getSiteId(token).then(function(id) {
       var url = "https://graph.microsoft.com/v1.0/sites/" + id +
         "/lists/" + encodeURIComponent(CONFIG.listName) +
-        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,LienPhoto,Modified)&$top=200";
+        "/items?expand=fields(select=id,Title,Statutfiche,Th_x00e9_matique,SiteClient,Gainsobtenus,DescriptionSolution,CP_Reproductible,Typedeprojet,LienPhoto,LienVid_x00e9_o,Modified)&$top=200";
 
       return fetch(url, { headers: { Authorization: "Bearer " + token } });
     });
@@ -440,9 +440,9 @@ function openModal(i) {
   document.getElementById('modalSharepoint').onclick = function() {
     window.open('https://' + CONFIG.tenantName + '.sharepoint.com/sites/' + CONFIG.siteAlias + '/_layouts/15/listform.aspx?PageType=4&ListId=%7B' + CONFIG.listName + '%7D&ID=' + item.id, '_blank');
   };
-  document.getElementById('btnTechnique').onclick = function() { generatePdf(item, 'technique'); };
-  document.getElementById('btnCommerce').onclick = function() { generatePdf(item, 'commerce'); };
-  document.getElementById('modalLink').onclick = function() { generatePdf(item, 'complet'); };
+  document.getElementById('btnTechnique').onclick = function() { openFicheView(item, 'technique'); };
+  document.getElementById('btnCommerce').onclick = function() { openFicheView(item, 'commerce'); };
+  document.getElementById('modalLink').onclick = function() { openFicheView(item, 'complet'); };
 
   var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'N/A');
   document.getElementById('modalMeta').innerHTML =
@@ -453,188 +453,125 @@ function openModal(i) {
 }
 
 // =============================================
-// GÉNÉRATION PDF
+// VUE FICHE EN NOUVEL ONGLET
 // =============================================
-var PDF_RED = [226, 0, 26];
-var PDF_DARK = [60, 60, 60];
-var PDF_MID = [110, 110, 110];
-var PDF_LIGHT = [245, 245, 245];
-
-function generatePdf(item, type) {
-  var doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-  var pageW = doc.internal.pageSize.getWidth();
-  var margin = 18;
-  var y = 0;
-
+function openFicheView(item, type) {
   var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
-  var theme = item.Th_x00e9_matique || '';
   var typeProjet = Array.isArray(item.Typedeprojet) ? item.Typedeprojet.join(', ') : (item.Typedeprojet || '');
+  var theme = item.Th_x00e9_matique || '';
   var titre = item.Title || 'Sans titre';
-  var desc = item.DescriptionSolution || 'Non renseignée.';
-  var gains = item.Gainsobtenus || 'Non renseignés.';
+  var desc = item.DescriptionSolution || '';
+  var gains = item.Gainsobtenus || '';
+  var photo = item.LienPhoto || '';
+  var video = item.LienVid_x00e9_o || '';
+  var statut = item.Statutfiche || '';
+  var repro = item.CP_Reproductible || '';
+  var date = item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : '';
 
-  // Bandeau supérieur rouge
-  doc.setFillColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-  doc.rect(0, 0, pageW, 4, 'F');
-
-  // En-tête anthracite
-  doc.setFillColor(PDF_DARK[0], PDF_DARK[1], PDF_DARK[2]);
-  doc.rect(0, 4, pageW, 28, 'F');
-  doc.setTextColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ONET LOGISTIQUE & PRODUCTION', margin, 14);
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Campus de la Performance', margin, 23);
-
-  var labelByType = {
-    technique:  'FICHE TECHNIQUE',
-    commerce:   'FICHE COMMERCIALE',
-    complet:    'FICHE PROJET COMPLÈTE'
+  var labels = {
+    technique: 'FICHE TECHNIQUE',
+    commerce:  'FICHE COMMERCIALE',
+    complet:   'FICHE PROJET COMPLÈTE'
   };
-  doc.setFontSize(9);
-  doc.setTextColor(220,220,220);
-  doc.text(labelByType[type] || 'FICHE PROJET', pageW - margin, 14, { align: 'right' });
 
-  y = 40;
+  var photoHtml = photo
+    ? '<img src="' + photo + '" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onError="this.style.display=String.fromCharCode(110,111,110,101)" />'
+    : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;background:#F5F5F5;border-radius:6px;">&#128247;</div>';
 
-  // Titre du projet
-  doc.setTextColor(PDF_DARK[0], PDF_DARK[1], PDF_DARK[2]);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  var titleLines = doc.splitTextToSize(titre, pageW - 2*margin);
-  doc.text(titleLines, margin, y);
-  y += titleLines.length * 7 + 2;
-
-  // Métadonnées (badges sous forme de texte)
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(PDF_MID[0], PDF_MID[1], PDF_MID[2]);
-  var metaLine = 'Site(s) client : ' + clientDisplay + '   |   Thématique : ' + theme + '   |   Type : ' + typeProjet;
-  doc.text(metaLine, margin, y);
-  y += 4;
-
-  // Ligne séparatrice rouge
-  doc.setDrawColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y+2, pageW - margin, y+2);
-  y += 10;
-
-  function sectionTitle(text) {
-    doc.setFillColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-    doc.rect(margin, y-4, 1.2, 5, 'F');
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-    doc.text(text, margin + 4, y);
-    y += 7;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10.5);
-    doc.setTextColor(PDF_DARK[0], PDF_DARK[1], PDF_DARK[2]);
+  var videoHtml = '';
+  if (video) {
+    // Détecter YouTube
+    var ytMatch = video.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+      videoHtml = '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' + ytMatch[1] + '" frameborder="0" allowfullscreen style="border-radius:6px;"></iframe>';
+    } else {
+      videoHtml = '<video controls style="width:100%;height:100%;border-radius:6px;"><source src="' + video + '"></video>';
+    }
+  } else {
+    videoHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;background:#F5F5F5;border-radius:6px;color:#BBBBBB;">🎬</div>';
   }
 
-  function sectionBody(text, color) {
-    var lines = doc.splitTextToSize(text, pageW - 2*margin);
-    if (color) doc.setTextColor(color[0], color[1], color[2]);
-    doc.text(lines, margin, y);
-    y += lines.length * 5.5 + 8;
-    doc.setTextColor(PDF_DARK[0], PDF_DARK[1], PDF_DARK[2]);
-  }
-
+  // Contenu selon le type
+  var leftTop = '', leftBottom = '';
   if (type === 'commerce') {
-    // === FICHE COMMERCE : orientée valeur client, gains, pitch ===
-    sectionTitle('Ce que nous avons fait pour vous');
-    sectionBody(desc);
-
-    sectionTitle('Les bénéfices obtenus');
-    doc.setFillColor(PDF_LIGHT[0], PDF_LIGHT[1], PDF_LIGHT[2]);
-    var gainsLines = doc.splitTextToSize(gains, pageW - 2*margin - 10);
-    var boxH = gainsLines.length * 5.5 + 8;
-    doc.roundedRect(margin, y-5, pageW - 2*margin, boxH, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.text(gainsLines, margin + 5, y);
-    y += boxH + 6;
-    doc.setFont('helvetica', 'normal');
-
-    sectionTitle('Pourquoi Onet');
-    sectionBody("Cette réalisation illustre notre capacité à mettre en œuvre des solutions concrètes, mesurables, et adaptées aux enjeux de votre site. Nos équipes locales s'appuient sur cette expérience pour proposer des démarches similaires, avec un accompagnement de proximité et un engagement sur les résultats.");
-
+    leftTop = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (desc || 'Non renseignée.') + '</p>';
+    leftBottom = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (gains || 'Non renseignés.') + '</p>';
   } else if (type === 'technique') {
-    // === FICHE TECHNIQUE : détails opérationnels, méthode, KPIs ===
-    sectionTitle('Contexte & problématique');
-    sectionBody(desc);
-
-    sectionTitle('Indicateurs de performance (KPIs)');
-    sectionBody(gains);
-
-    sectionTitle('Reproductibilité');
-    sectionBody('Reproductible : ' + (item.CP_Reproductible || 'Non renseigné') + '. Une analyse des prérequis (volumétrie, configuration du site, ressources nécessaires) doit être menée avant tout déploiement sur un nouveau site.');
-
-    sectionTitle('Statut de la fiche');
-    sectionBody('Statut : ' + (item.Statutfiche || 'Non renseigné') + ' — Dernière mise à jour : ' + (item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : 'N/A'));
-
+    leftTop = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (desc || 'Non renseignée.') + '</p>';
+    leftBottom = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (gains || 'Non renseignés.') + '<br><br>'
+      + '<strong>Statut :</strong> ' + statut + ' &nbsp;|&nbsp; <strong>Reproductible :</strong> ' + repro
+      + ' &nbsp;|&nbsp; <strong>Mis à jour :</strong> ' + date + '</p>';
   } else {
-    // === FICHE COMPLÈTE : toutes les infos ===
-    sectionTitle('Contexte & Solution');
-    sectionBody(desc);
-
-    sectionTitle('Gains obtenus');
-    sectionBody(gains);
-
-    sectionTitle('Informations complémentaires');
-    sectionBody('Statut : ' + (item.Statutfiche || 'N/A') + '   |   Reproductible : ' + (item.CP_Reproductible || 'N/A') + '   |   Mis à jour le : ' + (item.Modified ? new Date(item.Modified).toLocaleDateString('fr-FR') : 'N/A'));
+    leftTop = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (desc || 'Non renseignée.') + '</p>';
+    leftBottom = '<p style="font-size:14px;color:#3C3C3C;line-height:1.7;">' + (gains || 'Non renseignés.') + '</p>';
   }
 
-  // Pied de page
-  var pageH = doc.internal.pageSize.getHeight();
-  doc.setDrawColor(PDF_RED[0], PDF_RED[1], PDF_RED[2]);
-  doc.setLineWidth(0.3);
-  doc.line(margin, pageH - 15, pageW - margin, pageH - 15);
-  doc.setFontSize(8);
-  doc.setTextColor(PDF_MID[0], PDF_MID[1], PDF_MID[2]);
-  doc.text('Campus de la Performance — Onet Logistique & Production', margin, pageH - 10);
-  doc.text('Document généré automatiquement', pageW - margin, pageH - 10, { align: 'right' });
+  var leftTopLabel = type === 'commerce' ? 'DESCRIPTION SOLUTION' : 'CONTEXTE & PROBLÉMATIQUE';
+  var leftBottomLabel = type === 'commerce' ? 'AVANTAGES POUR LE CLIENT' : (type === 'technique' ? 'GAINS & INDICATEURS' : 'GAINS OBTENUS');
+  var rightBottomLabel = type === 'technique' ? 'DOCUMENTATION TECHNIQUE' : 'VIDÉO';
 
-  function finalizeAndSave() {
-    var safeTitle = titre.replace(/[^a-z0-9]+/gi, '_').substring(0, 40);
-    doc.save('Fiche_' + type + '_' + safeTitle + '.pdf');
-  }
+  var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + titre + ' — Campus de la Performance</title>'
+    + '<style>'
+    + '*{margin:0;padding:0;box-sizing:border-box;}'
+    + 'body{font-family:Arial,sans-serif;background:#F5F5F5;min-height:100vh;}'
+    + '.header{background:#3C3C3C;border-top:4px solid #E2001A;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}'
+    + '.header-left .label{color:#E2001A;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;}'
+    + '.header-left .title{color:#fff;font-size:16px;}'
+    + '.header-badge{background:#E2001A;color:#fff;font-size:11px;padding:4px 12px;border-radius:4px;font-weight:600;letter-spacing:0.05em;}'
+    + '.fiche{max-width:1100px;margin:28px auto;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.08);overflow:hidden;}'
+    + '.fiche-header{padding:24px 32px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;border-bottom:0.5px solid #E8E8E8;padding-bottom:20px;}'
+    + '.fiche-header-left{flex:1;}'
+    + '.fiche-header-right{width:200px;height:140px;flex-shrink:0;}'
+    + '.fiche-type{font-size:11px;color:#E2001A;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}'
+    + '.fiche-title{font-size:24px;font-weight:500;color:#3C3C3C;margin-bottom:14px;}'
+    + '.badges{display:flex;gap:10px;flex-wrap:wrap;}'
+    + '.badge{font-size:12px;background:#F5F5F5;color:#6E6E6E;padding:4px 12px;border-radius:20px;}'
+    + '.fiche-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}'
+    + '.fiche-col{padding:28px 32px;}'
+    + '.fiche-col:first-child{border-right:0.5px solid #E8E8E8;}'
+    + '.section{margin-bottom:28px;}'
+    + '.section-title{font-size:11px;color:#E2001A;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;border-left:3px solid #E2001A;padding-left:8px;margin-bottom:12px;}'
+    + '.media-box{width:100%;height:260px;}'
+    + '.footer{background:#3C3C3C;padding:12px 32px;text-align:center;}'
+    + '.footer p{color:rgba(255,255,255,0.4);font-size:11px;}'
+    + '@media print{body{background:#fff;}.header,.footer{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}'
+    + '</style></head><body>'
+    + '<div class="header">'
+    +   '<div class="header-left"><p class="label">Onet Logistique &amp; Production</p><p class="title">Campus de la Performance</p></div>'
+    +   '<div class="header-badge">' + (labels[type] || 'FICHE PROJET') + '</div>'
+    + '</div>'
+    + '<div class="fiche">'
+    +   '<div class="fiche-header">'
+    +     '<div class="fiche-header-left">'
+    +       '<p class="fiche-type">' + typeProjet + '</p>'
+    +       '<h1 class="fiche-title">' + titre + '</h1>'
+    +       '<div class="badges">'
+    +         '<span class="badge">🏢 ' + clientDisplay + '</span>'
+    +         '<span class="badge">📁 ' + theme + '</span>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="fiche-header-right">' + photoHtml + '</div>'
+    +   '</div>'
+    +   '<div class="fiche-body">'
+    +     '<div class="fiche-col">'
+    +       '<div class="section"><p class="section-title">' + leftTopLabel + '</p>' + leftTop + '</div>'
+    +       '<div class="section"><p class="section-title">' + leftBottomLabel + '</p>' + leftBottom + '</div>'
+    +     '</div>'
+    +     '<div class="fiche-col">'
+    +       '<div class="section"><p class="section-title">' + rightBottomLabel + '</p><div class="media-box">' + videoHtml + '</div></div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="footer"><p>Campus de la Performance — Onet Logistique &amp; Production</p></div>'
+    + '</body></html>';
 
-  // Tenter d'ajouter la photo si disponible
-  if (item.LienPhoto) {
-    var imgEl = new Image();
-    imgEl.crossOrigin = 'Anonymous';
-    imgEl.onload = function() {
-      try {
-        // Taille d'affichage finale dans le PDF (mm)
-        var displayW = 50, displayH = 35;
-        var aspect = imgEl.width / imgEl.height;
-        if (aspect > displayW/displayH) { displayH = displayW / aspect; } else { displayW = displayH * aspect; }
-
-        // Rendu du canvas en haute résolution (3x) pour éviter le flou
-        var scale = 3;
-        var canvas = document.createElement('canvas');
-        canvas.width = imgEl.width * scale > 1200 ? 1200 : imgEl.width * scale;
-        canvas.height = canvas.width / aspect;
-        var ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
-        var imgData = canvas.toDataURL('image/jpeg', 0.92);
-        doc.addImage(imgData, 'JPEG', pageW - margin - displayW, 8, displayW, displayH);
-      } catch(e) {
-        console.warn('Photo non incluse dans le PDF (CORS) :', e.message);
-      }
-      finalizeAndSave();
-    };
-    imgEl.onerror = function() { finalizeAndSave(); };
-    imgEl.src = item.LienPhoto;
-  } else {
-    finalizeAndSave();
-  }
+  var newTab = window.open('', '_blank');
+  newTab.document.write(html);
+  newTab.document.close();
 }
+
 
 // Démarrer quand DOM prêt
 document.addEventListener('DOMContentLoaded', function() {
