@@ -354,10 +354,11 @@ function doSearch() {
     var items = (data.value || []).map(function(i){ return i.fields; });
     allResults = items.filter(function(item) {
       var siteClientStr = Array.isArray(item.SiteClient) ? item.SiteClient.join(' ') : (item.SiteClient || '');
+      var typeProjetStr = Array.isArray(item.Typedeprojet) ? item.Typedeprojet.join(' ') : (item.Typedeprojet || '');
       return (item.Title && item.Title.toLowerCase().includes(q)) ||
              (siteClientStr && siteClientStr.toLowerCase().includes(q)) ||
              (item.Th_x00e9_matique && item.Th_x00e9_matique.toLowerCase().includes(q)) ||
-             (item.Typedeprojet && item.Typedeprojet.toLowerCase().includes(q)) ||
+             (typeProjetStr && typeProjetStr.toLowerCase().includes(q)) ||
              (item.DescriptionSolution && item.DescriptionSolution.toLowerCase().includes(q)) ||
              (item.Gainsobtenus && item.Gainsobtenus.toLowerCase().includes(q));
     });
@@ -420,7 +421,8 @@ function openModal(i) {
   var filtered = currentFilter === 'tous' ? allResults : allResults.filter(function(x){ return x.Th_x00e9_matique === currentFilter; });
   var item = filtered[i];
   if (!item) return;
-  document.getElementById('modalType').textContent = item.Typedeprojet || item.Th_x00e9_matique || 'Fiche Projet';
+  var typeProjetDisplay = Array.isArray(item.Typedeprojet) ? item.Typedeprojet.join(', ') : item.Typedeprojet;
+  document.getElementById('modalType').textContent = typeProjetDisplay || item.Th_x00e9_matique || 'Fiche Projet';
   document.getElementById('modalTitle').textContent = item.Title || 'Sans titre';
   document.getElementById('modalDesc').textContent = item.DescriptionSolution || 'Non renseignée.';
   document.getElementById('modalGains').textContent = item.Gainsobtenus || 'Non renseignés.';
@@ -466,7 +468,7 @@ function generatePdf(item, type) {
 
   var clientDisplay = Array.isArray(item.SiteClient) ? item.SiteClient.join(', ') : (item.SiteClient || 'Multi-sites');
   var theme = item.Th_x00e9_matique || '';
-  var typeProjet = item.Typedeprojet || '';
+  var typeProjet = Array.isArray(item.Typedeprojet) ? item.Typedeprojet.join(', ') : (item.Typedeprojet || '');
   var titre = item.Title || 'Sans titre';
   var desc = item.DescriptionSolution || 'Non renseignée.';
   var gains = item.Gainsobtenus || 'Non renseignés.';
